@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:notes_app/model/note.dart';
+import 'package:path/path.dart';
 
 class NotesDatabase {
   static final NotesDatabase instance = NotesDatabase._init();
@@ -16,13 +18,52 @@ class NotesDatabase {
 
   Future<Database> _initDB(String filePath) async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath,filePath);
+    final path = join(filePath, dbPath);
 
     return await openDatabase(path, version: 1, onCreate: _createDB);
   }
   Future _createDB(Database db, int version) async {
-    
+    final idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
+    final boolType = 'BOOLEAN NOT NULL';
+    final integerType = 'INTEGER NOT NULL';
+    final textType = 'TEXT NOT NULL';
+     
+    await db.execute(
+'''
+CREATE TABLE $tableNotes (
+  ${NoteFields.id} $idType,
+  ${NoteFields.isImp} $boolType,
+  ${NoteFields.number} $integerType,
+  ${NoteFields.title} $textType
+  ${NoteFields.description} $textType
+  ${NoteFields.time} $textType
+)
+'''
+    );
   }
+
+  Future<Note> create(Note note) async {
+    final db = await instance.database;
+
+    final id = await db.insert(tableNotes, note.toJson());
+    return note.copy(id: id);
+  }
+  Future<Note> readNote(int id) async {
+    final db = await instance.database;
+
+    final maps = await db.query(
+      tableNotes,
+      columns: NoteFields.values,
+      where:  '${NoteFields.id} = ?',
+      whereArgs: [id]
+
+    );
+    if (maps.isNotEmpty) {
+      return Note.fromJson(maps.first); 
+    }
+
+  }
+
   Future close() async {
     final db = await instance.database;
     db.close();
