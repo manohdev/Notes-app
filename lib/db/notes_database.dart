@@ -50,7 +50,7 @@ CREATE TABLE $tableNotes (
   }
   Future<Note> readNote(int id) async {
     final db = await instance.database;
-
+  
     final maps = await db.query(
       tableNotes,
       columns: NoteFields.values,
@@ -60,9 +60,39 @@ CREATE TABLE $tableNotes (
     );
     if (maps.isNotEmpty) {
       return Note.fromJson(maps.first); 
+    } else {
+      throw Exception('ID $id not found');
     }
 
   }
+
+  Future<List<Note>> readAllNotes() async {
+    final db = await instance.database;
+    final orderBy = '${NoteFields.time} ASC';
+
+    final result = await db.query(tableNotes, orderBy: orderBy);
+    return result.map((json) => Note.fromJson(json)).toList(); 
+
+  }
+  Future<int> update(Note note) async {
+    final db = await instance.database;
+    return db.update(
+      tableNotes,
+      note.toJson(),
+      where: '${NoteFields.id} = ?',
+      whereArgs: [note.id]
+    );
+  }
+  Future<int> delete(int id) async {
+    final db = await instance.database;
+
+    return await db.delete(
+      tableNotes,
+      where: '${NoteFields.id} = ?',
+      whereArgs: [id]
+    );
+  }
+
 
   Future close() async {
     final db = await instance.database;

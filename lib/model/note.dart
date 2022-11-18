@@ -48,7 +48,15 @@ class Note {
                       createdTime: createdTime?? this.createdTime
 
                     );
-  // static Note fromJson(Map<String, Object?> json) =>
+  static Note fromJson(Map<String, Object?> json) => Note(
+    id: json[NoteFields.id] as int?,
+    isImp: json[NoteFields.isImp] == 1,
+    number: json[NoteFields.number] as int,
+    title: json[NoteFields.title] as String,
+    description: json[NoteFields.description] as String,
+    createdTime: DateTime.parse(json[NoteFields.time] as String),
+    
+  );
 
   Map<String, Object?> toJson() => {
     NoteFields.id: id,
